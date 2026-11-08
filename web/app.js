@@ -1,7 +1,7 @@
 /* Bibilingo – traduction automatique. Code original, sans dépendance externe. */
 "use strict";
 (function () {
-  var VERSION = "1.0.1";
+  var VERSION = "1.0.2";
   var $ = function (id) { return document.getElementById(id); };
   var LANGS = window.BIBI_LANGS, PHRASES = window.BIBI_PHRASES, CATS = window.BIBI_CATS;
   var SRC_TTS = { ro: "ro-RO", fr: "fr-FR" };
@@ -437,6 +437,8 @@
     setTimeout(function () { toast("Première utilisation : Aide → « Télécharger toutes les langues »"); }, 1500);
   }
   if (!NATIVE && "serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js").catch(function () { });
+    navigator.serviceWorker.register("sw.js").then(function (r) { r.update(); }).catch(function () { });
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () { if (!reloaded) { reloaded = true; location.reload(); } });
   }
 })();
