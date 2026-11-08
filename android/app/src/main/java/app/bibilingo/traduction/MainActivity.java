@@ -142,13 +142,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     }
 
     /* ---------- micro ---------- */
-    private void startListening(String langTag) {
+    private void startListening(String langTag) { startListening(langTag, false); }
+
+    /** standard = true : micro classique du téléphone (si la langue hors ligne n'est pas installée). */
+    private void startListening(String langTag, boolean standard) {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             listenEvent("error", "no-recognizer");
             return;
         }
         if (recognizer != null) recognizer.destroy();
-        boolean onDevice = Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this);
+        boolean onDevice = !standard && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this);
         recognizer = onDevice ? SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
                 : SpeechRecognizer.createSpeechRecognizer(this);
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -165,6 +168,15 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             @Override public void onEndOfSpeech() { }
             @Override public void onEvent(int t, Bundle b) { }
             @Override public void onError(int error) {
+                if (onDevice && (error == 12 || error == 13)) {
+                    // Langue hors ligne absente : on demande son téléchargement, puis on passe au micro classique.
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        try { recognizer.triggerModelDownload(i); } catch (Exception ignored) { }
+                    }
+                    listenEvent("info", "fallback");
+                    ui.post(() -> startListening(langTag, true));
+                    return;
+                }
                 String e;
                 switch (error) {
                     case SpeechRecognizer.ERROR_NO_MATCH:
@@ -212,7 +224,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             try {
                 JSONObject o = new JSONObject();
                 o.put("native", true);
-                o.put("version", "1.0.0");
+                o.put("version", "1.0.3");
                 o.put("onDeviceSpeech", Build.VERSION.SDK_INT >= 31
                         && SpeechRecognizer.isOnDeviceRecognitionAvailable(MainActivity.this));
                 return o.toString();

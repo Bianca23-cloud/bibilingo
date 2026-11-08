@@ -1,7 +1,7 @@
 /* Bibilingo – traduction automatique. Code original, sans dépendance externe. */
 "use strict";
 (function () {
-  var VERSION = "1.0.2";
+  var VERSION = "1.0.3";
   var $ = function (id) { return document.getElementById(id); };
   var LANGS = window.BIBI_LANGS, PHRASES = window.BIBI_PHRASES, CATS = window.BIBI_CATS;
   var SRC_TTS = { ro: "ro-RO", fr: "fr-FR" };
@@ -310,6 +310,7 @@
     listenHandler = function (ev) {
       if (ev.type === "partial" || ev.type === "final") $("text").value = ev.text;
       else if (ev.type === "error") toast(errs[ev.text] || "Micro : erreur (" + ev.text + ")");
+      else if (ev.type === "info" && ev.text === "fallback") toast("Micro hors ligne non installé : micro classique utilisé (téléchargement demandé)");
       else if (ev.type === "end") { setListening(false); if ($("text").value.trim()) doTranslate(true); }
     };
     $("text").value = ""; setListening(true);
