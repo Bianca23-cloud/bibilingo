@@ -1,0 +1,49 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'app.bibilingo.traduction'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.bibilingo.traduction'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    // Clé de signature pour Google Play : fournie par les « secrets » GitHub (jamais dans le code).
+    def ksFile = System.getenv('BIBI_KEYSTORE_FILE')
+    signingConfigs {
+        if (ksFile) {
+            upload {
+                storeFile file(ksFile)
+                storePassword System.getenv('BIBI_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('BIBI_KEY_ALIAS') ?: 'bibilingo'
+                keyPassword System.getenv('BIBI_KEY_PASSWORD') ?: System.getenv('BIBI_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Avec la clé Google Play si elle est configurée ; sinon clé locale (installation directe uniquement).
+            signingConfig ksFile ? signingConfigs.upload : signingConfigs.debug
+        }
+    }
+    lint {
+        checkReleaseBuilds false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.mlkit:translate:17.0.3'
+    implementation 'androidx.webkit:webkit:1.12.1'
+}

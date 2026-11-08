@@ -1,0 +1,69 @@
+name: Android – construire l'application
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Installer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Copier l'interface dans l'application
+        run: |
+          rm -rf android/app/src/main/assets/www
+          mkdir -p android/app/src/main/assets
+          cp -r web android/app/src/main/assets/www
+          rm -f android/app/src/main/assets/www/sw.js android/app/src/main/assets/www/_headers
+
+      - name: Clé Google Play (seulement si les secrets existent)
+        env:
+          KS: ${{ secrets.BIBI_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            echo "BIBI_KEYSTORE_FILE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+          fi
+
+      - name: Compiler (APK + AAB)
+        env:
+          BIBI_KEYSTORE_PASSWORD: ${{ secrets.BIBI_KEYSTORE_PASSWORD }}
+        run: gradle -p android --no-daemon --stacktrace assembleRelease bundleRelease
+
+      - name: Ranger les fichiers
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Bibilingo-android.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab dist/Bibilingo-google-play.aab
+          ls -la dist
+
+      - name: Garder les fichiers (onglet Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bibilingo-android
+          path: dist/
+
+      - name: Publier la version « latest » (onglet Releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/* --title "Bibilingo – dernière version" \
+            --notes "APK à installer directement sur Android ; AAB pour Google Play. Construit automatiquement le $(date -u +%F)."

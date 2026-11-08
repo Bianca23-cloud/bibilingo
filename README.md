@@ -10,6 +10,8 @@ allemand, russe, japonais, chinois, néerlandais, roumain, français).
 | `android/` | Application Android : traduction **hors ligne** (Google ML Kit), micro et voix du téléphone |
 | `.github/workflows/` | Construction automatique dans le cloud (GitHub Actions) |
 
-**Télécharger l'application Android :** onglet **Releases** → `latest` → `Bibilingo-android.apk`.
+**Télécharger / installer / partager :** https://bianca23-cloud.github.io/bibilingo/telecharger.html
+
+**APK Android direct :** https://github.com/Bianca23-cloud/bibilingo/releases/latest/download/Bibilingo-android.apk
 
 Confidentialité : aucune donnée collectée, voir `web/privacy.html`.

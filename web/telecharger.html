@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+<title>Télécharger Bibilingo – traduction automatique</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <img src="icons/icon.svg" width="72" height="72" alt="">
+  <div><h1>Bibilingo</h1><p class="subtitle">traduction automatique · gratuit</p></div>
+</header>
+<main>
+<section class="panel">
+  <h2>Installer Bibilingo</h2>
+  <p id="detect" class="hint" role="status"></p>
+
+  <article class="result dl-card" id="c-android">
+    <h3>🤖 Android – application complète, hors ligne</h3>
+    <a class="btn primary" href="https://github.com/Bianca23-cloud/bibilingo/releases/latest/download/Bibilingo-android.apk">⬇️ Télécharger l'application Android (.apk)</a>
+    <ol>
+      <li>Touchez le bouton, puis ouvrez le fichier téléchargé.</li>
+      <li>Si Android le demande : <strong>Paramètres → Autoriser cette source</strong>, puis revenez.</li>
+      <li>Touchez <strong>Installer</strong>, puis <strong>Ouvrir</strong>.</li>
+      <li>Avec internet, une seule fois : <strong>Aide → Télécharger toutes les langues</strong>.</li>
+    </ol>
+  </article>
+
+  <article class="result dl-card" id="c-windows">
+    <h3>🪟 Windows 11 – en 1 clic</h3>
+    <button id="install" class="btn primary" type="button" hidden>💾 Installer Bibilingo sur cet ordinateur</button>
+    <ol>
+      <li>Ouvrez cette page avec <strong>Microsoft Edge</strong> ou <strong>Google Chrome</strong>.</li>
+      <li>Cliquez sur <strong>Installer Bibilingo</strong> (ou l'icône ⊕ « Installer » à droite de la barre d'adresse).</li>
+      <li>Bibilingo apparaît dans le <strong>menu Démarrer</strong>.</li>
+    </ol>
+    <a class="btn" href="index.html">▶️ Ouvrir Bibilingo dans le navigateur</a>
+  </article>
+
+  <article class="result dl-card" id="c-iphone">
+    <h3>🍏 iPhone / iPad</h3>
+    <ol>
+      <li>Ouvrez cette page avec <strong>Safari</strong>.</li>
+      <li>Touchez <strong>Partager</strong> (carré avec flèche ↑).</li>
+      <li>Touchez <strong>Sur l'écran d'accueil</strong> → <strong>Ajouter</strong>.</li>
+    </ol>
+    <p class="hint">Sur iPhone, la traduction d'une phrase nouvelle demande internet (règles d'Apple). Les favoris et les 30 phrases métier marchent hors ligne.</p>
+    <a class="btn" href="index.html">▶️ Ouvrir Bibilingo</a>
+  </article>
+
+  <h3>Partager</h3>
+  <p>Envoyez simplement l'adresse de cette page : <strong id="share-url"></strong></p>
+  <button id="copy-link" class="btn" type="button">📋 Copier le lien</button>
+  <p class="hint">Aucune donnée collectée · <a href="privacy.html">confidentialité</a> · traduction hors ligne Android : Google ML Kit.</p>
+</section>
+</main>
+<p id="toast" class="toast" role="status" aria-live="polite"></p>
+<script src="telecharger.js"></script>
+</body>
+</html>
