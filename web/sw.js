@@ -1,6 +1,6 @@
 /* Bibilingo – fonctionnement hors ligne (cache de l'application). */
 "use strict";
-const CACHE = "bibilingo-v1.0.0";
+const CACHE = "bibilingo-v1.0.1";
 const FILES = ["./", "index.html", "styles.css", "app.js", "phrases.js", "privacy.html", "telecharger.html", "telecharger.js",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });

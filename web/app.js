@@ -1,7 +1,7 @@
 /* Bibilingo – traduction automatique. Code original, sans dépendance externe. */
 "use strict";
 (function () {
-  var VERSION = "1.0.0";
+  var VERSION = "1.0.1";
   var $ = function (id) { return document.getElementById(id); };
   var LANGS = window.BIBI_LANGS, PHRASES = window.BIBI_PHRASES, CATS = window.BIBI_CATS;
   var SRC_TTS = { ro: "ro-RO", fr: "fr-FR" };
@@ -244,6 +244,14 @@
 
   /* ---------- micro (reconnaissance vocale) ---------- */
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, listening = false, localMode = false;
+  var IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && "ontouchend" in document);
+  var IOS_APP = IOS && (window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+  /* iPhone : le micro web est bloqué dans les applis installées → dictée du clavier (🎤 Apple, aussi hors ligne). */
+  function iosDictation(reason) {
+    var t = $("text"); t.value = ""; t.focus();
+    toast("Touchez le 🎤 du clavier pour dicter" + (state.src === "ro" ? " (clavier roumain)" : " (clavier français)") + ", puis ✨ Traduire");
+    $("mic-info").textContent = "📱 iPhone : dictez avec le 🎤 du clavier (Réglages → Général → Clavier → activer la dictée et ajouter le clavier " + (state.src === "ro" ? "roumain" : "français") + ")." + (reason ? " " + reason : "");
+  }
   /* Vérification « sur l'appareil » seulement sur demande (bouton Réglages) : plus sûr au démarrage. */
   function checkLocal(lang) {
     if (NATIVE) { localMode = !!NATIVE.onDeviceSpeech; return localMode; }
@@ -266,6 +274,7 @@
     toast("Roumain : " + (res["ro-RO"] ? "hors ligne ✅" : "en ligne") + " · Français : " + (res["fr-FR"] ? "hors ligne ✅" : "en ligne"));
   }
   function updateMicInfo() {
+    if (IOS && !NATIVE && (IOS_APP || !SR)) { $("mic-info").textContent = "📱 iPhone : touchez 🎙️ puis le 🎤 du clavier pour dicter (dictée Apple, aussi hors ligne si la langue est téléchargée)."; return; }
     if (!SR && !NATIVE) { $("mic").disabled = true; $("mic-info").textContent = "Micro non pris en charge par ce navigateur : écrivez votre phrase (Chrome, Edge ou Safari conseillés)."; return; }
     var loc = checkLocal(SRC_TTS[state.src]);
     $("mic-info").textContent = loc ? "🔒 Reconnaissance de la voix sur l'appareil (privée, hors ligne)."
@@ -287,7 +296,8 @@
       $("text").value = (finalText + interim).trim();
     };
     rec.onerror = function (ev) {
-      var m = { "not-allowed": "Micro refusé : autorisez-le dans les réglages du navigateur.", "no-speech": "Je n'ai rien entendu, réessayez.", "network": "Pas de réseau pour la reconnaissance vocale : écrivez la phrase." };
+      if (IOS && ev.error !== "no-speech") { iosDictation(); return; }
+      var m = { "not-allowed": "Micro refusé : autorisez-le dans les réglages du navigateur.", "service-not-allowed": "Micro indisponible ici : écrivez ou dictez avec le clavier.", "no-speech": "Je n'ai rien entendu, réessayez.", "network": "Pas de réseau pour la reconnaissance vocale : écrivez la phrase.", "language-not-supported": "Langue non prise en charge par le micro : dictez avec le clavier." };
       toast(m[ev.error] || "Micro : erreur (" + ev.error + ")");
     };
     rec.onend = function () { setListening(false); if ($("text").value.trim()) doTranslate(true); };
@@ -313,6 +323,7 @@
       startNative(); return;
     }
     if (listening && rec) { rec.stop(); return; }
+    if (IOS && (IOS_APP || !SR)) { iosDictation(); return; }
     checkLocal(SRC_TTS[state.src]);
     if (!localMode && !settings.micConsent) { openConsent(); return; }
     startRec();
@@ -400,6 +411,11 @@
     });
     $("voice-settings").addEventListener("click", function () { window.BibiNative.openVoiceSettings(); });
   }
+  $("go-online").addEventListener("click", function () {
+    settings.online = true; saveSettings(); $("set-online").checked = true;
+    if (!navigator.onLine) { toast("Pas de connexion : connectez-vous au Wi-Fi ou aux données mobiles"); return; }
+    primeAudio(); doTranslate(true);
+  });
   $("forget-mic").addEventListener("click", function () { settings.micConsent = false; saveSettings(); toast("Accord micro retiré"); });
 
   function renderCaps() {
