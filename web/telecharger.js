@@ -1,7 +1,7 @@
 "use strict";
 (function () {
-  var ua = navigator.userAgent, os = /Android/i.test(ua) ? "android" : /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && "ontouchend" in document) ? "iphone" : "windows";
-  var names = { android: "Android", iphone: "iPhone / iPad", windows: "ordinateur (Windows)" };
+  var ua = navigator.userAgent, os = /Android/i.test(ua) ? "android" : /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && "ontouchend" in document) ? "iphone" : /Macintosh|Linux/i.test(ua) ? "mac" : "windows";
+  var names = { android: "Android", iphone: "iPhone / iPad", windows: "ordinateur Windows", mac: "Mac ou Linux" };
   document.getElementById("detect").textContent = "Appareil détecté : " + names[os] + ". Votre section est en premier.";
   var card = document.getElementById("c-" + os); card.parentNode.insertBefore(card, document.getElementById("c-android"));
   card.classList.add("mine");

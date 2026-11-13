@@ -26,6 +26,18 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      - name: Ajouter le module pinyin du chinois (pinyin-pro, licence MIT)
+        run: |
+          mkdir -p web/vendor
+          cd "$RUNNER_TEMP"
+          npm pack pinyin-pro@3 --silent
+          tar -xzf pinyin-pro-*.tgz
+          MAIN=$(node -p "require('./package/package.json').main || 'dist/index.js'")
+          cp "package/$MAIN" "$GITHUB_WORKSPACE/web/vendor/pinyin-pro.js"
+          cp package/LICENSE "$GITHUB_WORKSPACE/web/vendor/pinyin-pro-LICENSE.txt" || true
+          node -e "const vm=require('vm'),fs=require('fs');const c={};c.self=c;c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const p=c.pinyinPro;if(!p)throw new Error('pinyinPro absent');const r=p.pinyin('你好，我叫安娜。',{toneType:'symbol',nonZh:'consecutive'});console.log(r);if(!/nǐ hǎo/.test(r))throw new Error('pinyin incorrect')" "$GITHUB_WORKSPACE/web/vendor/pinyin-pro.js"
+          ls -la "$GITHUB_WORKSPACE/web/vendor"
+
       - name: Copier l'interface dans l'application
         run: |
           rm -rf android/app/src/main/assets/www

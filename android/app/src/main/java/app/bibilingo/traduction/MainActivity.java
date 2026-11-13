@@ -224,7 +224,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             try {
                 JSONObject o = new JSONObject();
                 o.put("native", true);
-                o.put("version", "1.0.3");
+                o.put("version", "2.0.0");
                 o.put("onDeviceSpeech", Build.VERSION.SDK_INT >= 31
                         && SpeechRecognizer.isOnDeviceRecognitionAvailable(MainActivity.this));
                 return o.toString();
