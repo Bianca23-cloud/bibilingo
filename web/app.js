@@ -260,14 +260,24 @@
       return;
     }
     if (!synth) { toast("Audio indisponible sur ce navigateur"); return; }
+    try { synth.resume(); } catch (e) { } /* iOS : relance la file de lecture si elle est en pause */
     synth.cancel();
     var u = new SpeechSynthesisUtterance(text); u.lang = code; u.rate = rate || settings.rate;
     var v = pickVoice(code); if (v) { try { u.voice = v; } catch (e) { } }
+    var started = false;
+    u.onstart = function () { started = true; };
     u.onend = u.onerror = function () { setSpeaking(false); if (onEnd) onEnd(); };
-    setSpeaking(true); synth.speak(u);
+    setSpeaking(true);
+    try { synth.speak(u); } catch (e) { setSpeaking(false); }
+    setTimeout(function () { try { synth.resume(); } catch (e) { } }, 180); /* contournement d'un bug iOS */
+    /* iPhone : si la voix de la langue de sortie n'est pas installée, rien ne sort → on prévient clairement */
+    if (IOS && !v) setTimeout(function () {
+      if (!started) { setSpeaking(false); toast("Voix « " + code + " » absente sur cet iPhone : Réglages → Accessibilité → Contenu énoncé → Voix → ajoutez-la, puis réessayez."); }
+    }, 900);
   }
   function primeAudio() { /* iPhone : débloque l'audio pendant le geste de l'utilisateur */
-    if (synth && !primeAudio.done) { try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); } catch (e) { } primeAudio.done = true; }
+    if (synth) { try { synth.resume(); } catch (e) { } }
+    if (synth && !primeAudio.done) { try { var u = new SpeechSynthesisUtterance("​"); u.volume = 0; synth.speak(u); } catch (e) { } primeAudio.done = true; }
   }
   function voiceInfo(code) {
     if (NATIVE) return window.BibiNative.hasVoice(code) ? "Voix « " + code + " » du téléphone · hors ligne"
@@ -322,7 +332,10 @@
     var card = $("result"); card.hidden = false; card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
     sparkle();
     addHisto(state.last);
-    if (autoplay && settings.autoplay) speak(res.out, lt.tts);
+    if (autoplay && settings.autoplay) {
+      if (IOS) { try { synth && synth.resume(); } catch (e) { } setTimeout(function () { speak(res.out, lt.tts); }, 220); }
+      else speak(res.out, lt.tts);
+    }
   }
   function wordRoman(word, script) {
     if (script === "japanese") {

@@ -1,6 +1,6 @@
 /* Bibilingo – fonctionnement hors ligne (cache de l'application). */
 "use strict";
-const CACHE = "bibilingo-v2.0.2";
+const CACHE = "bibilingo-v2.0.3";
 const FILES = ["./", "index.html", "styles.css", "app.js", "vocab.js", "translit.js", "privacy.html", "telecharger.html", "telecharger.js",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).then(() => c.add("vendor/pinyin-pro.js").catch(() => { /* module pinyin facultatif */ }))).then(() => self.skipWaiting())); });
