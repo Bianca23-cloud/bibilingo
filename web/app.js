@@ -142,12 +142,27 @@
     return Promise.race([promise, new Promise(function (_, rej) { setTimeout(function () { rej(new Error("timeout")); }, ms); })]);
   }
   function hasDeviceMT() { return !!NATIVE || typeof self.Translator !== "undefined"; }
+  var dlTried = false;
   async function deviceTranslate(text, a, b) {
     if (NATIVE) {
       try {
         var r = await withTimeout(nativeCall(function (id) { window.BibiNative.translate(id, text, a, b); }), 90000);
         if (r.ok) return r.data;
-        if (r.data === "model-missing") toast("Langue non téléchargée : Aide → « Télécharger toutes les langues » (avec internet)");
+        if (r.data === "model-missing") {
+          /* La langue de sortie n'est pas encore sur le téléphone : on l'installe automatiquement puis on réessaie. */
+          if (!navigator.onLine) { toast("Langue de sortie pas encore installée : connectez-vous à internet une seule fois pour la télécharger."); return null; }
+          toast("Installation de la langue de sortie… (une seule fois, gardez internet)");
+          var dl = await nativeCall(function (id) { window.BibiNative.downloadAll(id, false); },
+            function (pr) { try { $("dl-status").textContent = "Téléchargement des langues : " + pr; } catch (e) { } });
+          dlTried = true;
+          if (dl && dl.ok) {
+            store.set("langsReady", true);
+            var r2 = await withTimeout(nativeCall(function (id) { window.BibiNative.translate(id, text, a, b); }), 90000);
+            if (r2.ok) { toast("Langues installées ✅ — ça marche maintenant hors ligne"); return r2.data; }
+          } else {
+            toast("Téléchargement incomplet : réessayez avec une meilleure connexion (Aide → « Télécharger toutes les langues »).");
+          }
+        }
       } catch (e) { }
       return null;
     }
