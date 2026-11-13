@@ -81,7 +81,7 @@
     syncLangs();
     if (retranslate && $("text").value.trim()) doTranslate(false);
   }
-  selSrc.addEventListener("change", function () { setLangs(selSrc.value, state.tgt, true); });
+  selSrc.addEventListener("change", function () { setLangs(selSrc.value, state.tgt, false); $("result").hidden = true; $("fallback").hidden = true; });
   selTgt.addEventListener("change", function () { setLangs(state.src, selTgt.value, true); });
   function swap(withText) {
     var b = $("swap"); b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin");
@@ -151,11 +151,13 @@
       } catch (e) { }
       return null;
     }
-    if (typeof self.Translator === "undefined") return null;
+    if (typeof self.Translator === "undefined" || translators.broken) return null;
     var key = a + ">" + b;
     try {
       if (!translators[key]) {
-        var av = await withTimeout(self.Translator.availability({ sourceLanguage: a, targetLanguage: b }), 5000);
+        var av;
+        try { av = await withTimeout(self.Translator.availability({ sourceLanguage: a, targetLanguage: b }), 5000); }
+        catch (e) { translators.broken = true; return null; } /* API présente mais qui ne répond pas : on ne l'attend plus */
         if (av === "unavailable") return null;
         if (av !== "available") toast("Téléchargement du modèle " + a + " → " + b + " (une seule fois)…");
         translators[key] = await withTimeout(self.Translator.create({ sourceLanguage: a, targetLanguage: b }), av === "available" ? 15000 : 120000);
@@ -349,18 +351,18 @@
     $("gt-link").href = "https://translate.google.com/?sl=" + code(s) + "&tl=" + code(t) + "&text=" + encodeURIComponent(text) + "&op=translate";
   }
 
-  var busy = false, again = null;
+  var reqSeq = 0, pendingReq = 0;
   async function doTranslate(autoplay) {
     var text = $("text").value.trim().slice(0, MAX_LEN);
     if (!text) { toast("Dites ou écrivez une phrase"); $("text").focus(); return; }
-    if (busy) { again = !!autoplay || !!again; return; } /* relancé dès la fin de la traduction en cours */
-    busy = true; $("go").disabled = true; $("go").textContent = "⏳ Traduction…"; document.body.classList.add("thinking");
+    var id = ++reqSeq, src = state.src, tgt = state.tgt; /* la demande la plus récente gagne toujours */
+    pendingReq++; $("go").textContent = "⏳ Traduction…"; document.body.classList.add("thinking");
     try {
-      var res = await translate(text, state.src, state.tgt);
-      if (res) await showResult(state.src, state.tgt, text, res, autoplay); else showFallback(text);
+      var res = await translate(text, src, tgt);
+      if (id !== reqSeq) return;
+      if (res) await showResult(src, tgt, text, res, autoplay); else showFallback(text);
     } finally {
-      busy = false; $("go").disabled = false; $("go").textContent = "✨ Traduire"; document.body.classList.remove("thinking");
-      if (again !== null) { var a = again; again = null; doTranslate(a); }
+      if (--pendingReq === 0) { $("go").textContent = "✨ Traduire"; document.body.classList.remove("thinking"); }
     }
   }
   $("go").addEventListener("click", function () { primeAudio(); doTranslate(true); });
