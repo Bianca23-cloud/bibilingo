@@ -64,6 +64,9 @@ select{width:100%;min-height:52px;padding:.4rem .7rem;border-radius:16px;border:
 .mic-ico{font-size:2rem;position:relative;z-index:1}
 .mic #mic-label{position:relative;z-index:1}
 .mic[aria-pressed="true"]{background:linear-gradient(135deg,#FFC3D6,#E4D6FF);border-color:var(--mauve-fort)}
+.mic.mic-sec{min-height:58px;font-size:1.05rem;background:linear-gradient(135deg,#E4D6FF,#FFE9F1);border-color:var(--mauve-fort);margin-top:-.2rem}
+.mic.mic-sec .mic-ico{font-size:1.4rem}
+.hint-mic{text-align:center;margin:.1rem 0 .2rem}
 .rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
 .rings i{position:absolute;width:60px;height:60px;border-radius:50%;border:3px solid rgba(107,63,160,.45);opacity:0}
 textarea,.search{width:100%;border-radius:16px;border:2px solid var(--bord);padding:.7rem .9rem;background:#FFFDF7;resize:vertical;font-size:1.15rem}
@@ -165,3 +168,5 @@ textarea,.search{width:100%;border-radius:16px;border:2px solid var(--bord);padd
 }
 @media (max-width:560px) and (prefers-reduced-motion:no-preference){.swap.spin{animation:spin90 .45s ease}@keyframes spin90{from{transform:rotate(90deg)}to{transform:rotate(270deg)}}}
 @media (forced-colors:active){.btn,.tab,.pill,.mic,.swap,.chip{border:2px solid ButtonText}}
+
+.voices .lt-name{font-weight:700;margin:0}

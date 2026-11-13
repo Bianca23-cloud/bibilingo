@@ -61,6 +61,11 @@
       <span class="mic-ico" aria-hidden="true">🎙️</span>
       <span id="mic-label">Appuyer et parler</span>
     </button>
+    <button id="mic-tgt" class="mic mic-sec" type="button">
+      <span class="mic-ico" aria-hidden="true">🎙️</span>
+      <span id="mic-tgt-label">Réponse</span>
+    </button>
+    <p class="hint hint-mic">Deux micros : le grand pour <strong>vous</strong>, le petit pour <strong>votre interlocuteur</strong>. Chacun écoute et prononce dans sa langue native.</p>
     <label for="text" class="sr-only">Texte à traduire</label>
     <textarea id="text" rows="3" maxlength="1000" placeholder="… ou écrivez votre phrase ici"></textarea>
     <div class="row">
@@ -160,6 +165,10 @@
     <button id="probe-sr" class="btn" type="button">🎙️ Micro hors ligne pour la langue parlée : vérifier / installer</button>
     <button id="forget-mic" class="btn" type="button">Retirer mon accord pour le micro en ligne</button>
   </div>
+  <h3>Micro et voix, dans les 15 langues</h3>
+  <p class="hint">Le <strong>grand micro</strong> écoute dans la langue « Je parle » ; le <strong>petit micro</strong> écoute dans la langue « Traduire en ». Chaque langue est reconnue et prononcée avec la voix native du pays (Microsoft sur Windows, Google sur Android, Apple sur iPhone). État langue par langue sur cet appareil :</p>
+  <ul id="langtable" class="voices"></ul>
+  <p class="hint">💡 <strong>ElevenLabs</strong> : non inclus. C'est un service <strong>payant</strong> qui envoie le texte sur ses serveurs — contraire au fonctionnement <strong>hors ligne et privé</strong> de Bibilingo. Les voix natives Microsoft / Google / Apple ci-dessus sont gratuites, hors ligne et prononcées par des locuteurs natifs.</p>
   <h3>Voix natives (une par langue et par pays)</h3>
   <p class="hint">Bibilingo choisit la voix du bon pays (ex. espagnol d'Argentine, portugais du Portugal). Vous pouvez en choisir une autre et la tester.</p>
   <ul id="voices" class="voices"></ul>

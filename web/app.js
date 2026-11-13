@@ -54,7 +54,7 @@
     if (id === "p-vocab") renderVocab();
     if (id === "p-favs") renderFavs();
     if (id === "p-histo") renderHisto();
-    if (id === "p-aide") { renderVoices(); renderCaps(); }
+    if (id === "p-aide") { renderLangTable(); renderVoices(); renderCaps(); }
   }
   document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { showTab(b.dataset.tab); }); });
   document.addEventListener("click", function (e) { var g = e.target.closest("[data-goto]"); if (g) showTab(g.dataset.goto); });
@@ -71,7 +71,7 @@
     $("src-code").textContent = L(state.src).short; $("tgt-code").textContent = L(state.tgt).short;
     $("text").setAttribute("lang", L(state.src).tts);
     $("text").placeholder = "… ou écrivez ici en " + L(state.src).label.replace(/ \(.*\)/, "").toLowerCase();
-    renderRecent(); updateMicInfo();
+    renderRecent(); updateMicInfo(); renderMicLabels();
   }
   function setLangs(src, tgt, retranslate) {
     if (src === tgt) { tgt = state.src === src ? state.tgt : state.src; if (src === tgt) tgt = src === "fr" ? "ro" : "fr"; }
@@ -387,6 +387,11 @@
   var IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && "ontouchend" in document);
   var IOS_APP = IOS && (window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
   function srcName() { return L(state.src).label.replace(/ \(.*\)/, "").toLowerCase(); }
+  function tgtName() { return L(state.tgt).label.replace(/ \(.*\)/, "").toLowerCase(); }
+  function renderMicLabels() {
+    if (!listening) $("mic-label").textContent = "Parler en " + srcName();
+    var mt = $("mic-tgt-label"); if (mt) mt.textContent = "Réponse en " + tgtName();
+  }
   function iosDictation() {
     var t = $("text"); t.value = ""; t.focus();
     toast("Touchez le 🎤 du clavier pour dicter en " + srcName() + ", puis ✨ Traduire");
@@ -415,7 +420,8 @@
   }
   function setListening(on) {
     listening = on; $("mic").setAttribute("aria-pressed", on ? "true" : "false");
-    $("mic-label").textContent = on ? "J'écoute en " + srcName() + "… (touchez pour arrêter)" : "Appuyer et parler en " + srcName();
+    if (on) $("mic-label").textContent = "J'écoute en " + srcName() + "… (touchez pour arrêter)";
+    renderMicLabels();
     document.body.classList.toggle("listening", on);
   }
   function startRec() {
@@ -428,7 +434,7 @@
     };
     rec.onerror = function (ev) {
       if (IOS && ev.error !== "no-speech") { iosDictation(); return; }
-      var m = { "not-allowed": "Micro refusé : autorisez-le dans les réglages du navigateur.", "service-not-allowed": "Micro indisponible ici : écrivez ou dictez avec le clavier.", "no-speech": "Je n'ai rien entendu, réessayez.", "network": "Pas de réseau pour la reconnaissance vocale : écrivez la phrase.", "language-not-supported": "Langue non prise en charge par le micro : dictez avec le clavier." };
+      var m = { "not-allowed": "Micro refusé : autorisez-le dans les réglages du navigateur.", "service-not-allowed": "Micro indisponible ici : écrivez ou dictez avec le clavier.", "no-speech": "Je n'ai rien entendu, réessayez.", "network": "Pas de réseau pour la reconnaissance vocale : écrivez la phrase.", "language-not-supported": "Le micro ne reconnaît pas le " + srcName() + " sur cet appareil : installez la langue (Aide) ou dictez au clavier." };
       toast(m[ev.error] || "Micro : erreur (" + ev.error + ")");
     };
     rec.onend = function () { setListening(false); if ($("text").value.trim()) doTranslate(true); };
@@ -460,6 +466,14 @@
     startRec();
   }
   $("mic").addEventListener("click", function () { primeAudio(); startMic(); });
+  /* petit micro : écoute dans la langue de sortie (inverse) et traduit vers la langue d'entrée */
+  $("mic-tgt").addEventListener("click", function () {
+    primeAudio();
+    if (listening) { startMic(); return; } /* arrête le micro en cours */
+    setLangs(state.tgt, state.src, false);
+    $("result").hidden = true; $("fallback").hidden = true;
+    startMic();
+  });
   function openConsent() {
     var m = $("consent"); m.hidden = false; $("c-ok").focus();
     var close = function () { m.hidden = true; $("mic").focus(); };
@@ -540,6 +554,20 @@
   var SAMPLE = { fr: "Bonjour, je m'appelle Bibi.", ro: "Bună ziua, mă numesc Bibi.", en: "Hello, my name is Bibi.", ptBR: "Olá, meu nome é Bibi.", ptPT: "Olá, chamo-me Bibi.",
     it: "Buongiorno, mi chiamo Bibi.", esES: "Buenos días, me llamo Bibi.", esMX: "Buenos días, me llamo Bibi.", esAR: "Buen día, me llamo Bibi.", el: "Καλημέρα, με λένε Μπίμπι.",
     de: "Guten Tag, ich heiße Bibi.", ru: "Здравствуйте, меня зовут Биби.", ja: "こんにちは、ビビです。", zh: "你好，我叫比比。", nl: "Goedendag, ik heet Bibi." };
+  function renderLangTable() {
+    var ul = $("langtable"); if (!ul) return; ul.replaceChildren();
+    LANGS.forEach(function (l) {
+      var li = el("li");
+      var mic = NATIVE ? "micro : service du téléphone (natif)"
+        : IOS ? "micro : dictée Apple (clavier " + l.short + ")"
+        : SR ? "micro : " + l.tts + " (natif)" : "micro : écrire au clavier";
+      var v = NATIVE ? (window.BibiNative.hasVoice(l.tts) ? "voix installée ✅" : "voix à installer ⚠️")
+        : (pickVoice(l.tts) ? "voix : " + pickVoice(l.tts).name : "voix à installer ⚠️");
+      li.appendChild(el("p", { class: "lt-name" }, l.label));
+      li.appendChild(el("p", { class: "hint" }, "🎙️ " + mic + " · 🔊 " + v + (l.script !== "latin" ? " · ✍️ translittération " + (l.script === "greek" ? "grecque" : l.script === "cyrillic" ? "russe" : l.script === "han" ? "pinyin" : "rōmaji") : "")));
+      ul.appendChild(li);
+    });
+  }
   function renderVoices() {
     var ul = $("voices"); ul.replaceChildren();
     LANGS.forEach(function (l) {
